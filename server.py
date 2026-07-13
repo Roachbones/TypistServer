@@ -1,7 +1,9 @@
-import sys, os, termios, tty, threading
+import sys, os, queue, termios, tty, threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 lock = threading.Lock()
+monitor_lock = threading.Lock()
+monitor_subscribers = set()
 
 CTRL_C = "\x03"
 CTRL_D = "\x04"
@@ -10,7 +12,17 @@ BACKSPACE = "\x7f"
 def read_raw_char(fd):
     return os.read(fd, 1).decode('utf8', errors='ignore')
 
+def tell_monitors(text: str):
+    with monitor_lock:
+        subscribers = list(monitor_subscribers)
+    for q in subscribers:
+        q.put(text)
+
+
 class TypistHandler(BaseHTTPRequestHandler):
+    def version_string(self):
+        return 'Vivian'
+
     def _write_chunk(self, text):
         data = text.encode('utf8')
         if not data: return
@@ -37,6 +49,7 @@ class TypistHandler(BaseHTTPRequestHandler):
             if not self.parse_request():
                 # An error code has been sent, just exit
                 return
+            '''
             mname = 'do_' + self.command
             if not hasattr(self, mname):
                 self.send_error(
@@ -44,7 +57,8 @@ class TypistHandler(BaseHTTPRequestHandler):
                     "Unsupported method (%r)" % self.command)
                 return
             method = getattr(self, mname)
-            method()
+            '''
+            self.do()
             self.wfile.flush() #actually send the response if not already done.
         except TimeoutError as e:
             #a read or a write timed out.  Discard this connection
@@ -52,20 +66,33 @@ class TypistHandler(BaseHTTPRequestHandler):
             self.close_connection = True
             return
 
-    def do_GET(self):
-        self.do()
-
-    def do_POST(self):
-        self.do()
-
-    def do(self):
-        self.send_response(200) # todo
-        self.send_header("Content-Type", "text/plain; charset=utf-8") # todo
+    def preamb(self, status_code):
+        self.send_response(status_code)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Transfer-Encoding", "chunked")
         self.end_headers()
 
+    def do(self):
+        if self.path == '/favicon.ico':
+            self.send_error(404)
+            return
+        if self.path == '/monitor':
+            return self.handle_monitor()
+
         with lock:
-            print(f"\n» {self.command} {self.path} from {self.client_address[0]}")
+            print(f"\n» From {self.client_address[0]}")
+            print(self.requestline)
+            for k, v in self.headers.items():
+                print('', k + ': ' + v)
+
+            status_code = input('Status code (default 200):')
+            try:
+                status_code = int(status_code or 200)
+            except:
+                print('whatever. going with 200')
+                status_code = 200
+            self.preamb(status_code)
+
             print("» Type response. Ctrl+C/D to finish.")
             print("   ", end="", flush=True)
 
@@ -82,20 +109,44 @@ class TypistHandler(BaseHTTPRequestHandler):
                     sys.stdout.write(ch)
                     sys.stdout.flush()
                     self._write_chunk(ch)
+                    tell_monitors(ch)
             finally:
                 termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
         self._end_chunks()
-        print(">> Response sent.\n")
+        tell_monitors('')
+        print("\n» Response sent.\n")
 
     def log_message(self, format, *args):
         pass
+
+    def handle_monitor(self):
+        self.preamb(200)
+
+        q = queue.Queue()
+        with monitor_lock:
+            monitor_subscribers.add(q)
+
+        try:
+            while True:
+                text = q.get()
+                if not text:
+                    self._write_chunk("<script>location=location</script>")
+                    self._end_chunks()
+                    break
+                self._write_chunk(text)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        finally:
+            with monitor_lock:
+                monitor_subscribers.discard(q)
+
 
 assert sys.stdin.isatty()
 
 server = ThreadingHTTPServer(("localhost", 8000), TypistHandler)
 print("Typist server running on http://localhost:8000")
-print("Waiting for requests... (Ctrl+C here to quit)\n")
+print("Waiting for requests...\n")
 
 try:
     server.serve_forever()
