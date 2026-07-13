@@ -144,7 +144,7 @@ class TypistHandler(BaseHTTPRequestHandler):
 
 assert sys.stdin.isatty()
 
-server = ThreadingHTTPServer(("localhost", 8000), TypistHandler)
+server = ThreadingHTTPServer(("", 8000), TypistHandler)
 print("Typist server running on http://localhost:8000")
 print("Waiting for requests...\n")
 
