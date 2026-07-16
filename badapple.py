@@ -23,6 +23,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
     def do_GET(self):
+        if self.path=='/favicon.ico': return self.send_error(404)
         print(f"\n» From {self.client_address[0]}")
         print(self.requestline)
         for k, v in self.headers.items():
@@ -32,6 +33,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Transfer-Encoding", "chunked")
         self.end_headers()
         last_frame = None
+        self._write_chunk('This page uses no JS, no CSS, and no HTML tags except &lt;dialog open&gt; & &lt;br&gt;.<br><br>')
         for frame in frames:
             if frame != last_frame:
                 self._write_chunk('<dialog open>\n'+frame+'\n</dialog>')
