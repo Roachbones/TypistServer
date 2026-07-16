@@ -10,7 +10,7 @@ CTRL_D = "\x04"
 BACKSPACE = "\x7f"
 
 def read_raw_char(fd):
-    return os.read(fd, 1).decode('utf8', errors='ignore')
+    return os.read(fd, 9).decode('utf8', errors='ignore')
 
 def tell_monitors(text: str):
     with monitor_lock:
@@ -145,7 +145,6 @@ class TypistHandler(BaseHTTPRequestHandler):
 assert sys.stdin.isatty()
 
 server = ThreadingHTTPServer(("", 8000), TypistHandler)
-print("Typist server running on http://localhost:8000")
 print("Waiting for requests...\n")
 
 try:
