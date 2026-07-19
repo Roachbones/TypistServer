@@ -1,7 +1,7 @@
 import sys, os, queue, termios, time, tty, threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-frame_paths = os.listdir('frames-ascii')
+frame_paths = os.listdir('frames-ascii-2')
 frame_paths.sort()
 frames = []
 j = 0
@@ -19,7 +19,7 @@ for frame_path in frame_paths:
     j += 1
     if j%3: continue
     hangers = []
-    with open('frames-ascii/'+frame_path) as file:
+    with open('frames-ascii-2/'+frame_path) as file:
         flines = file.read().strip().split('\n')
         hangers = [HOOK] * len(flines[0])
         for fline in flines:
@@ -66,7 +66,7 @@ class Handler(BaseHTTPRequestHandler):
 
 assert sys.stdin.isatty()
 
-server = ThreadingHTTPServer(("", 8000), Handler)
+server = ThreadingHTTPServer(("", 8002), Handler)
 
 try:
     server.serve_forever()
