@@ -1,4 +1,5 @@
 import sys, os, queue, termios, time, tty, threading
+import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 frame_paths = os.listdir('frames-ascii-2')
@@ -27,6 +28,15 @@ for frame_path in frame_paths:
                 hangers[n] += diacriticism[c]
         frames.append(DASH * 30 + ''.join(hangers))
 
+cΔts = []
+
+actpaths = os.listdir('performance/acts')
+actpaths.sort()
+for act in actpaths:
+    with open('performance/acts/'+act) as file:
+        for line in file:
+            cΔts.append(json.loads(line))
+
 #frames[0] = "‮"+frames[0]
 
 #print(''.join(frames))
@@ -50,6 +60,21 @@ class Handler(BaseHTTPRequestHandler):
         print(self.requestline)
         for k, v in self.headers.items():
             print('', k + ': ' + v)
+        if self.path=='/explainer': return self.explainer()
+        self.normalstyle()
+
+    def explainer(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Transfer-Encoding", "chunked")
+        self.end_headers()
+        for c, Δt in cΔts:
+            time.sleep(Δt*0.7)
+            self._write_chunk(c)
+        self.wfile.write(b"0\r\n\r\n")
+        self.wfile.flush()
+
+    def normalstyle(self):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Transfer-Encoding", "chunked")
