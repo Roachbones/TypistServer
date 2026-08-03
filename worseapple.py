@@ -34,6 +34,7 @@ actpaths = os.listdir('performance/acts')
 actpaths.sort()
 for act in actpaths:
     with open('performance/acts/'+act) as file:
+        if act != 'actO': continue
         for line in file:
             cΔts.append(json.loads(line))
 
@@ -68,8 +69,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Transfer-Encoding", "chunked")
         self.end_headers()
-        for c, Δt in cΔts:
-            time.sleep(Δt*0.7)
+        for cΔt in cΔts:
+            c, Δt = cΔt[:2]
+            time.sleep(Δt*0.05)
             self._write_chunk(c)
         self.wfile.write(b"0\r\n\r\n")
         self.wfile.flush()

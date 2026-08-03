@@ -1,4 +1,4 @@
-import sys, os, queue, termios, tty, threading
+import math, os, queue, sys termios, tty, threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 lock = threading.Lock()
@@ -9,6 +9,10 @@ CTRL_C = "\x03"
 CTRL_D = "\x04"
 BACKSPACE = "\x7f"
 
+ip_visits = {}
+ip_visits_lock = threading.Lock()
+COOLDOWN_SECONDS = 10
+
 def read_raw_char(fd):
     return os.read(fd, 9).decode('utf8', errors='ignore')
 
@@ -18,10 +22,21 @@ def tell_monitors(text: str):
     for q in subscribers:
         q.put(text)
 
+VIVIANDEX = """<title>Human server: Vivian</title>
+<h1>Human server: Vivian</h1>
+<p>This is a human HTTP server. Responses are served in realtime, except this index.
+<p>Status: <b>Testing</b>
+<p>Example requests:
+<ul>
+<li><a href=/vivian/hi>/vivian/hi</a>
+<li><a href=/vivian/fun_games>/vivian/fun_games</a>
+</ul>
+"""
 
 class TypistHandler(BaseHTTPRequestHandler):
+    protocol_version = 'HTTP/1.1'
     def version_string(self):
-        return 'Vivian'
+        return 'Human interface v1'
 
     def _write_chunk(self, text):
         data = text.encode('utf8')
@@ -72,24 +87,45 @@ class TypistHandler(BaseHTTPRequestHandler):
         self.send_header("Transfer-Encoding", "chunked")
         self.end_headers()
 
-    def do(self):
-        if self.path == '/favicon.ico':
-            self.send_error(404)
-            return
-        if self.path == '/monitor':
-            return self.handle_monitor()
+    def curt(self, status_code, body):
+        self.preamb(status_code)
+        self._write_chunk(body)
+        self._end_chunks()
 
+    def do(self):
+        if self.path in {'/',''}:
+            return self.curt(400, '<h1>Error 400</h1>You must specify a human.')
+        if self.path == '/monitor': return self.handle_monitor()
+        norm_path = self.path.lower()
+        if norm_path == '/favicon.ico': return self.curt(404, 'faviconless behavior')
+        if norm_path.startswith('/?human='):
+            return self.curt(400, '<h1>Error 400</h1>Not like that.')
+        if norm_path in {'/vivian','/vivian/','/vivian/index','/vivian/index.html'}:
+            return self.curt(200, VIVIANDEX)
+        if norm_path in {'/lynn','/lynn/','/lynn/index','/lynn/index.html'}:
+            return self.curt(410, '<h1>Error 410</h1>That human has escaped.')
+        if not norm_path.startswith('/vivian'):
+            return self.curt(404, '<h1>Error 404</h1>That human was not found. It may be uncaptured or currently outside its pod.')
+        print('('+self.path+')')
+        ip = self.client_address[0]
+        seconds_since_last_visit = math.floor(time.time() - ip_visits_lock.get(ip, [-math.inf])[-1])
+        if seconds_since_last_visit < COOLDOWN_SECONDS
+            return self.curt(429, '<h1>Error 429</h1>Please wait ' + (COOLDOWN_SECONDS - seconds_since_last_visit) + 'seconds before sending your next request.')
+        with ip_visits_lock: ip_visits.setdefault(ip, []).append(time.time())
         with lock:
-            print(f"\n» From {self.client_address[0]}")
+            print("\n» From",ip,'(visit',ip_visits[ip]+')')
             print(self.requestline)
             for k, v in self.headers.items():
                 print('', k + ': ' + v)
 
-            status_code = input('Status code (default 200):')
+            status_code = input('Status code (default 200):').lower()
+            if status_code == 'ban':
+                with ip_visits_lock: ip_visits[ip].append(time.time()+9999)
+                return self.curt(409, '<h1>Error 409</h1>Banned.')
             try:
                 status_code = int(status_code or 200)
             except:
-                print('whatever. going with 200')
+                print('Whatever. Going with 200')
                 status_code = 200
             self.preamb(status_code)
 
@@ -144,7 +180,7 @@ class TypistHandler(BaseHTTPRequestHandler):
 
 assert sys.stdin.isatty()
 
-server = ThreadingHTTPServer(("", 8000), TypistHandler)
+server = ThreadingHTTPServer(("", 4), TypistHandler)
 print("Waiting for requests...\n")
 
 try:
