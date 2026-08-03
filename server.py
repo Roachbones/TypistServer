@@ -1,5 +1,6 @@
 import math, os, queue, sys termios, tty, threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlsplit
 
 lock = threading.Lock()
 monitor_lock = threading.Lock()
@@ -91,24 +92,27 @@ class TypistHandler(BaseHTTPRequestHandler):
         self.preamb(status_code)
         self._write_chunk(body)
         self._end_chunks()
+    def hcurt(self, status_code, body):
+        return curt('<h1>' + 'Error ' * status_code > 399 + status_code + '</h1>')
 
     def do(self):
-        if self.path in {'/',''}:
-            return self.curt(400, '<h1>Error 400</h1>You must specify a human.')
-        if self.path == '/monitor': return self.handle_monitor()
-        norm_path = self.path.lower()
-        assert norm_path.startswith('/'), norm_path, self.path
-        human = norm_path.split('/')[1]
-        human = norm_path.split('?')[0]
-        if norm_path == '/favicon.ico': return self.curt(404, 'faviconless behavior')
-        if norm_path.startswith('/?human='):
+        if self.path.startswith('/?human='):
             return self.curt(400, '<h1>Error 400</h1>Not like that.')
-        if norm_path in {'/vivian','/vivian/','/vivian/index','/vivian/index.html'}:
+        u = urlsplit(self.path)
+        if u.path in {'/',''}:
+            return self.hcurt(400, 'You must specify a human.')
+        if u.path == '/monitor': return self.handle_monitor()
+        if u.path == '/favicon.ico': return self.curt(404, 'faviconless behavior')
+        # todo check if u.path starts with '/'?
+        human = u.path.split('/')[1].lower()
+        posthuman = asdasdasd todo
+        if norm_path in {'/vivian','/vivian/','/vivian/index','/vivian/index.html'}: # change this
             return self.curt(200, VIVIANDEX)
         if norm_path in {'/lynn','/lynn/','/lynn/index','/lynn/index.html'}:
-            return self.curt(410, '<h1>Error 410</h1>That human has escaped.')
+            return self.hcurt(410, 'That human has escaped.')
+        
         if not norm_path.startswith('/vivian'):
-            return self.curt(404, '<h1>Error 404</h1>That human was not found. It may be uncaptured or currently outside its pod.')
+            return self.hcurt(404, 'That human was not found. It may be uncaptured or currently outside its pod.')
         print('('+self.path+')')
         ip = self.client_address[0]
         seconds_since_last_visit = math.floor(time.time() - ip_visits_lock.get(ip, [-math.inf])[-1])
