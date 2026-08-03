@@ -97,6 +97,9 @@ class TypistHandler(BaseHTTPRequestHandler):
             return self.curt(400, '<h1>Error 400</h1>You must specify a human.')
         if self.path == '/monitor': return self.handle_monitor()
         norm_path = self.path.lower()
+        assert norm_path.startswith('/'), norm_path, self.path
+        human = norm_path.split('/')[1]
+        human = norm_path.split('?')[0]
         if norm_path == '/favicon.ico': return self.curt(404, 'faviconless behavior')
         if norm_path.startswith('/?human='):
             return self.curt(400, '<h1>Error 400</h1>Not like that.')
