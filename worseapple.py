@@ -74,11 +74,10 @@ class Handler(BaseHTTPRequestHandler):
         print(self.requestline)
         for k, v in self.headers.items():
             print('', k + ': ' + v)
-        if self.path=='/explainer': return self.explainer()
-        if self.path=='/dialog': return self.dialogstyle()
-        if self.path=='/zero': return self.normalstyle()
-        if self.path in ('/', '/index'):
-            self.index() # todo index
+        if self.path == '/explainer': return self.explainer()
+        if self.path == '/dialog': return self.dialogstyle()
+        if self.path == '/zero': return self.zerostyle()
+        if self.path in ('/', '/index'): return self.index()
         if self.path == '/favicon.ico':
             with open('badapple.ico', 'rb') as file: b = file.read()
             self.send_response(200)
@@ -87,7 +86,7 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b)
             return self.wfile.flush()
-        self.normalstyle()
+        self.zerostyle()
 
     def preamb(self, status_code):
         self.send_response(status_code)
@@ -126,7 +125,7 @@ This site <a href="https://en.wikipedia.org/wiki/Touhou_Project#Music:~:text=sta
         self.wfile.write(b"0\r\n\r\n")
         self.wfile.flush()
 
-    def normalstyle(self):
+    def zerostyle(self):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Transfer-Encoding", "chunked")
