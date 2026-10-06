@@ -22,7 +22,7 @@ for frame_path in sorted(os.listdir('frames-ascii-2')):
         flines = file.read().strip().split('\n')
         hangers = [HOOK] * len(flines[0])
         for fline in flines:
-            for n, c in enumerate(fline):
+            for n, c in enumerate(fline[::-1]):
                 hangers[n] += diacriticism[c]
         frames.append(DASH * 30 + ''.join(hangers))
 
@@ -45,8 +45,13 @@ actpaths.sort()
 for act in actpaths:
     with open('performance/acts/'+act) as file:
         if act != 'actO': continue
+        i = 0
         for line in file:
-            cΔts.append(json.loads(line))
+            i += 1
+            try:
+                cΔts.append(json.loads(line))
+            except:
+                assert 0, 'line ' + str(i)
 
 #frames[0] = "‮"+frames[0]
 
@@ -118,10 +123,17 @@ This site <a href="https://en.wikipedia.org/wiki/Touhou_Project#Music:~:text=sta
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Transfer-Encoding", "chunked")
         self.end_headers()
+        TMULT = .6
         for cΔt in cΔts:
-            c, Δt = cΔt[:2]
-            time.sleep(Δt * 0.05)
-            self.write_chunk(c)
+            if cΔt[0] == 1:
+                cs, Δt = cΔt[1:]
+                for c in cs:
+                    time.sleep(Δt * TMULT)
+                    self.write_chunk(c)
+            else:
+                c, Δt = cΔt[:2]
+                time.sleep(Δt * TMULT)
+                self.write_chunk(c)
         self.wfile.write(b"0\r\n\r\n")
         self.wfile.flush()
 
@@ -156,7 +168,7 @@ This site <a href="https://en.wikipedia.org/wiki/Touhou_Project#Music:~:text=sta
 
 assert sys.stdin.isatty()
 
-server = ThreadingHTTPServer(("", 80), Handler)
+server = ThreadingHTTPServer(("", 8181), Handler)
 
 try:
     server.serve_forever()
