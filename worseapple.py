@@ -70,7 +70,6 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
     def do_GET(self):
-        if self.path=='/favicon.ico': return self.send_error(404)
         print(f"\n» From {self.client_address[0]}")
         print(self.requestline)
         for k, v in self.headers.items():
