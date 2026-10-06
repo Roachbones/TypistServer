@@ -110,11 +110,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def index(self):
         s = """
-This site <a href="https://en.wikipedia.org/wiki/Touhou_Project#Music:~:text=staple%20in%20the%20demoscene%20and%20retrocomputing%20communities">demos</a> <a href="https://www.youtube.com/watch?v=FtutLA63Cp8"><i>Bad Apple</i></a> with no JS, no CSS, and an impressively minimal subset of HTML. See:
+This site <a href="https://en.wikipedia.org/wiki/Touhou_Project_fandom#Bad_Apple!!:~:text=demoscene">demos</a> <a href="https://www.youtube.com/watch?v=FtutLA63Cp8"><i>Bad Apple</i></a> with no JS, no CSS, and an impressively minimal subset of HTML. See:
 <ul>
 <li><a href=/dialog>No JS, no CSS, & no HTML tags except &lt;dialog open&gt; & &lt;br&gt;</a>. Even works over curl.
 <li><a href=/zero>No JS, no CSS, & no HTML tags at all!</a>
-<li><s>Explainer</s> WIP
+<li><a href=/explainer>Explainer</a>
 """
         self.curt(200, s)
 
