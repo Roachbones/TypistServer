@@ -80,6 +80,9 @@ class Handler(BaseHTTPRequestHandler):
         if self.path=='/zero': return self.normalstyle()
         if self.path in ('/', '/index'):
             self.index() # todo index
+        if self.path == '/favicon.ico':
+            with open('badapple.ico', 'rb') as file:
+                return self.wfile.write(file.read())
         self.normalstyle()
 
     def preamb(self, status_code):
