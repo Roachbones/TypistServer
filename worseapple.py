@@ -80,8 +80,13 @@ class Handler(BaseHTTPRequestHandler):
         if self.path in ('/', '/index'):
             self.index() # todo index
         if self.path == '/favicon.ico':
-            with open('badapple.ico', 'rb') as file:
-                return self.wfile.write(file.read())
+            with open('badapple.ico', 'rb') as file: b = file.read()
+            self.send_response(200)
+            self.send_header('Content-Type', 'image/x-icon')
+            self.send_header('Content-Length', len(b))
+            self.end_headers()
+            self.wfile.write(b)
+            return self.wfile.flush()
         self.normalstyle()
 
     def preamb(self, status_code):
