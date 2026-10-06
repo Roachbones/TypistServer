@@ -2,8 +2,6 @@ import sys, os, queue, termios, time, tty, threading
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-frame_paths = os.listdir('frames-ascii-2')
-frame_paths.sort()
 frames = []
 j = 0
 
@@ -16,7 +14,7 @@ DASH = "𒐪"
 DASH = "„"*9
 diacriticism = {"I":I,"X":X}
 
-for frame_path in frame_paths:
+for frame_path in sorted(os.listdir('frames-ascii-2')):
     j += 1
     if j%3: continue
     hangers = []
@@ -27,6 +25,18 @@ for frame_path in frame_paths:
             for n, c in enumerate(fline):
                 hangers[n] += diacriticism[c]
         frames.append(DASH * 30 + ''.join(hangers))
+
+FRAMES_WORSE = frames
+
+frames = []
+j = 0
+for frame_path in sorted(os.listdir('frames-ascii')):
+    j += 1
+    if j%3: continue
+    with open('frames-ascii/'+frame_path) as file:
+        frames.append(file.read().strip().replace('\n','<br>'*1+'\n'))
+
+FRAMES_DIALOG = frames
 
 cΔts = []
 
@@ -62,6 +72,7 @@ class Handler(BaseHTTPRequestHandler):
         for k, v in self.headers.items():
             print('', k + ': ' + v)
         if self.path=='/explainer': return self.explainer()
+        if self.path=='/dialog': return self.dialogstyle()
         self.normalstyle()
 
     def explainer(self):
@@ -83,12 +94,27 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         last_frame = None
         self._write_chunk("This page has zero HTML tags. (View the source!) ↘‮")
-        for frame in frames:
+        for frame in FRAMES_WORSE:
             if frame != last_frame:
                 self._write_chunk(frame)
             time.sleep((.1 / 3) * 3)
         self.wfile.write(b"0\r\n\r\n")
         self.wfile.flush()
+
+    def dialogstyle(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Transfer-Encoding", "chunked")
+        self.end_headers()
+        last_frame = None
+        self._write_chunk('This page uses no JS, no CSS, and no HTML tags except &lt;dialog open&gt; & &lt;br&gt;.<br><br>')
+        for frame in FRAMES_DIALOG:
+            if frame != last_frame:
+                self._write_chunk('<dialog open>\n'+frame+'\n</dialog>')
+            time.sleep(.1)
+        self.wfile.write(b"0\r\n\r\n")
+        self.wfile.flush()
+
 
 
 assert sys.stdin.isatty()
