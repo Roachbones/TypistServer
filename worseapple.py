@@ -9,11 +9,11 @@ j = 0
 
 I = " ͕"[-1]
 X = " ͚"[-1]
-HOOK = "a"
+HOOK = "„"
 DASH = "𒐫"
 DASH = "﷽"
 DASH = "𒐪"
-DASH = "aaaaaaaaa"
+DASH = "„"*9
 diacriticism = {"I":I,"X":X}
 
 for frame_path in frame_paths:
@@ -71,7 +71,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         for cΔt in cΔts:
             c, Δt = cΔt[:2]
-            time.sleep(Δt*0.05)
+            time.sleep(Δt * 0.05)
             self._write_chunk(c)
         self.wfile.write(b"0\r\n\r\n")
         self.wfile.flush()
@@ -82,11 +82,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Transfer-Encoding", "chunked")
         self.end_headers()
         last_frame = None
-        self._write_chunk("This page has zero HTML tags. BADAPPLE‮")
+        self._write_chunk("This page has zero HTML tags. (View the source!) ↘‮")
         for frame in frames:
             if frame != last_frame:
                 self._write_chunk(frame)
-            time.sleep(.1/2)
+            time.sleep((.1 / 3) * 3)
         self.wfile.write(b"0\r\n\r\n")
         self.wfile.flush()
 
