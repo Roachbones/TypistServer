@@ -124,6 +124,7 @@ This site <a href="https://en.wikipedia.org/wiki/Touhou_Project_fandom#Bad_Apple
         self.send_header("Transfer-Encoding", "chunked")
         self.end_headers()
         TMULT = .6
+        self.write_chunk('<p style=font-size:0px aria-hidden=true>Filler for Safari: ' + '❦'*300 + ' -->\n')
         for cΔt in cΔts:
             if cΔt[0] == 1:
                 cs, Δt = cΔt[1:]
