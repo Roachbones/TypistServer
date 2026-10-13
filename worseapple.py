@@ -114,7 +114,7 @@ This site <a href="https://en.wikipedia.org/wiki/Touhou_Project_fandom#Bad_Apple
 <ul>
 <li><a href=/dialog>No JS, no CSS, & no HTML tags except &lt;dialog open&gt; & &lt;br&gt;</a>. Even works over curl.
 <li><a href=/zero>No JS, no CSS, & no HTML tags at all!</a>
-<li><a href=/explainer>Explainer</a>
+<li><a href=/explainer>Explainer
 """
         self.curt(200, s)
 
